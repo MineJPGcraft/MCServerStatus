@@ -17,32 +17,24 @@ const config = JSON.parse(configFile)
 const hostname = config.api.hostname
 const port = config.api.port
 const platform = config.platform
+const cache = config.cache
 const cronExpression = config.cron
 config.servers.forEach(server => {
     serverList.push(new Server(server.id, server.ip, server.port))
 })
 
 // 读取到的数据
-const data = {}
+let data = {}
+
+if (cache) {
+    const cacheFile = fs.readFileSync(".cache.json", 'utf8')
+    data = JSON.parse(cacheFile)
+}
 
 // 每分钟执行一次定时任务
-cron.schedule(cronExpression, () => {
-    serverList.forEach(server => {
-        console.log(`Request server: ${server.ip}:${server.port}`)
-        const map = {}
-        mcstatus.status(server.ip, server.port).then(status => {
-            const serverData = {}
-            serverData['online'] = status.players.online
-            serverData['max'] = status.players.max
-            serverData['motd'] = status.motd.clean
-            serverData['ping'] = status.roundTripLatency
-            map[server.id] = serverData
-        }).catch(() => {})
-        const date = new Date()
-        data[date.toLocaleString()] = map
-    })
-})
+cron.schedule(cronExpression, updateData)
 
+// 请求接口
 app.get(`/${platform}/api/v1/get`, (req, res) => {
     let newData = {}
     const dataKeys = Object.keys(data)
@@ -58,6 +50,35 @@ app.get(`/${platform}/api/v1/get`, (req, res) => {
     res.send(newData)
 })
 
+// 启动!
 app.listen(port, hostname, () => {
     console.log(`Server is running on port ${port}`)
 })
+
+process.on('SIGTERM', onShutDown);
+process.on('SIGINT', onShutDown);
+
+function onShutDown() {
+    console.log('Shutting down server...');
+    if (cache) {
+        fs.writeFileSync(".cache.json", JSON.stringify(data), 'utf8')
+    }
+    process.exit(0);
+}
+
+async function updateData() {
+    serverList.forEach(server => {
+        console.log(`Request server: ${server.ip}:${server.port}`)
+        const map = {}
+        mcstatus.status(server.ip, server.port).then(status => {
+            const serverData = {}
+            serverData['online'] = status.players.online
+            serverData['max'] = status.players.max
+            serverData['motd'] = status.motd.clean
+            serverData['ping'] = status.roundTripLatency
+            map[server.id] = serverData
+        }).catch(() => {})
+        const date = new Date()
+        data[date.toLocaleString()] = map
+    })
+}

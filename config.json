@@ -11,5 +11,6 @@
       "port": 25565
     }
   ],
-  "platform": "mcss"
+  "platform": "mcss",
+  "cache": true
 }
