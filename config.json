@@ -1,0 +1,14 @@
+{
+  "api": {
+    "hostname": "localhost",
+    "port": 1145
+  },
+  "cron": "* * * * *",
+  "servers": [
+    {
+      "id": 1,
+      "ip": "localhost",
+      "port": 25565
+    }
+  ]
+}
