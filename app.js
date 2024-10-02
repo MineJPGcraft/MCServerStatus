@@ -16,6 +16,7 @@ const configFile = fs.readFileSync("config.json", 'utf8')
 const config = JSON.parse(configFile)
 const hostname = config.api.hostname
 const port = config.api.port
+const platform = config.platform
 const cronExpression = config.cron
 config.servers.forEach(server => {
     serverList.push(new Server(server.id, server.ip, server.port))
@@ -42,8 +43,19 @@ cron.schedule(cronExpression, () => {
     })
 })
 
-app.get('/', (req, res) => {
-    res.send(data)
+app.get(`/${platform}/api/v1/get`, (req, res) => {
+    let newData = {}
+    const dataKeys = Object.keys(data)
+    const dataValues = Object.values(data)
+    if (req.query.count > 0) {
+        const length = Object.keys(data).length
+        for (let i = length - 1; i >= (length - req.query.count < 0 ? 0 : length - req.query.count); i--) {
+            newData[dataKeys[i]] = dataValues[i]
+        }
+    } else {
+        newData = data
+    }
+    res.send(newData)
 })
 
 app.listen(port, hostname, () => {

@@ -10,5 +10,6 @@
       "ip": "localhost",
       "port": 25565
     }
-  ]
+  ],
+  "platform": "mcss"
 }
