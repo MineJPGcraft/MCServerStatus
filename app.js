@@ -18,6 +18,7 @@ const hostname = config.api.hostname
 const port = config.api.port
 const platform = config.platform
 const cache = config.cache
+const dataCount = config.dataCount
 const cronExpression = config.cron
 config.servers.forEach(server => {
     serverList.push(new Server(server.id, server.ip, server.port))
@@ -26,7 +27,7 @@ config.servers.forEach(server => {
 // 读取到的数据
 let data = {}
 
-if (cache) {
+if (cache && fs.existsSync(".cache.json")) {
     const cacheFile = fs.readFileSync(".cache.json", 'utf8')
     data = JSON.parse(cacheFile)
 }
@@ -81,4 +82,15 @@ async function updateData() {
         const date = new Date()
         data[date.toLocaleString()] = map
     })
+    if (Object.keys(data).length > dataCount) {
+        removeData(0)
+    }
+}
+
+function removeData(index) {
+    delete data[Object.keys(data)[index]]
+    for(let i = index; i < Object.keys(data).length - 1; i++) {
+        data[Object.keys(data)[i]] = data[Object.keys(data)[i + 1]]
+    }
+    delete data[Object.keys(data)[Object.keys(data).length]]
 }

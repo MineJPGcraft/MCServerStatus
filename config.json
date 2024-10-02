@@ -12,5 +12,6 @@
     }
   ],
   "platform": "mcss",
-  "cache": true
+  "cache": true,
+  "dataCount": 20
 }
