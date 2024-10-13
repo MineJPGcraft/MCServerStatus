@@ -85,7 +85,7 @@ app.get(`/${platform}/api/v1/get/:server/:type/img`, (req, res) => {
     let newData = {}
     const server = req.params.server
     const type = req.params.type
-    const color = req.query.color == null ? "0d7fc0" : req.query.color.replace("#", "")
+    const color = req.query.color === undefined ? "0d7fc0" : req.query.color.replace("#", "")
     if (type !== "online" && type !== "max" && type !== "motd" && type !== "ping") {
         res.status(400)
         res.send("Error: Invalid type")
