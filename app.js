@@ -51,11 +51,60 @@ app.get(`/${platform}/api/v1/get`, (req, res) => {
     res.send(newData)
 })
 
+app.get(`/${platform}/api/v1/get/:server`, (req, res) => {
+    let newData = {}
+    const server = req.params.server
+    const dataKeys = Object.keys(data)
+    const dataValues = Object.values(data)
+    const length = Object.keys(data).length
+    for (let i = length - 1; i >= (req.query.count > 0 ? (length - req.query.count < 0 ? 0 : length - req.query.count) : 0); i--) {
+        newData[dataKeys[i]] = (dataValues[i])[server]
+    }
+    res.send(newData)
+})
+
+app.get(`/${platform}/api/v1/get/:server/:type`, (req, res) => {
+    let newData = {}
+    const server = req.params.server
+    const type = req.params.type
+    if (type !== "online" && type !== "max" && type !== "motd" && type !== "ping") {
+        res.status(400)
+        res.send("Error: Invalid type")
+        return
+    }
+    const dataKeys = Object.keys(data)
+    const dataValues = Object.values(data)
+    const length = Object.keys(data).length
+    for (let i = length - 1; i >= (req.query.count > 0 ? (length - req.query.count < 0 ? 0 : length - req.query.count) : 0); i--) {
+        newData[dataKeys[i]] = ((dataValues[i])[server])[type]
+    }
+    res.send(newData)
+})
+
+app.get(`/${platform}/api/v1/get/:server/:type/img`, (req, res) => {
+    let newData = {}
+    const server = req.params.server
+    const type = req.params.type
+    const color = req.query.color == null ? "0d7fc0" : req.query.color.replace("#", "")
+    if (type !== "online" && type !== "max" && type !== "motd" && type !== "ping") {
+        res.status(400)
+        res.send("Error: Invalid type")
+        return
+    }
+    const dataKeys = Object.keys(data)
+    const dataValues = Object.values(data)
+    const length = Object.keys(data).length
+    const index = length - (req.query.length > 0 ? req.query.length : 1)
+    const name = req.query.name === undefined ? dataKeys[index] : req.query.name
+    res.redirect(`https://img.shields.io/badge/${name}-${((dataValues[index])[server])[type]}-${color}`)
+})
+
 // 启动!
 app.listen(port, hostname, () => {
     console.log(`Server is running on port ${port}`)
 })
 
+// 关闭处理
 process.on('SIGTERM', onShutDown);
 process.on('SIGINT', onShutDown);
 
@@ -67,6 +116,7 @@ function onShutDown() {
     process.exit(0);
 }
 
+// 数据处理
 async function updateData() {
     serverList.forEach(server => {
         console.log(`Request server: ${server.ip}:${server.port}`)
