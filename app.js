@@ -76,6 +76,7 @@ app.get(`/${platform}/api/v1/get/:server/:type`, (req, res) => {
     const dataValues = Object.values(data)
     const length = Object.keys(data).length
     for (let i = length - 1; i >= (req.query.count > 0 ? (length - req.query.count < 0 ? 0 : length - req.query.count) : 0); i--) {
+        if (dataValues[i][server] === undefined) continue
         newData[dataKeys[i]] = ((dataValues[i])[server])[type]
     }
     res.send(newData)
@@ -96,7 +97,11 @@ app.get(`/${platform}/api/v1/get/:server/:type/img`, (req, res) => {
     const length = Object.keys(data).length
     const index = length - (req.query.length > 0 ? req.query.length : 1)
     const name = req.query.name === undefined ? dataKeys[index] : req.query.name
-    res.redirect(`https://img.shields.io/badge/${name}-${((dataValues[index])[server])[type]}-${color}`)
+    if (dataKeys.length < index || (dataValues[index])[server] === undefined) {
+        res.redirect(`https://img.shields.io/badge/${name}-未知-${color}`)
+    } else {
+        res.redirect(`https://img.shields.io/badge/${name}-${((dataValues[index])[server])[type]}-${color}`)
+    }
 })
 
 // 启动!
